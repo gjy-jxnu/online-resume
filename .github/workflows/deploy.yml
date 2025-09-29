@@ -1,0 +1,54 @@
+name: 自动构建和部署
+on:
+  push:
+    branches: [ main ]  # 监听 main 分支的推送
+  # 允许手动触发构建
+  workflow_dispatch:
+
+# 设置权限
+env:
+  NODE_ENV: production
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    # 设置权限以允许部署到 GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 拉取所有历史记录以确保构建完整性
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  # 使用更新的 Node.js 版本以支持最新的 Vite 和 Vue
+          cache: 'pnpm'  # 启用依赖缓存
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: latest
+
+      - name: 安装依赖
+        run: pnpm install
+        env:
+          NODE_ENV: development  # 安装所有依赖（包括开发依赖）
+
+      - name: 构建项目
+        run: pnpm run build
+        env:
+          NODE_ENV: production  # 生产环境构建
+
+      - name: 部署到 GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist  # 部署 dist 文件夹中的内容
+          force_orphan: true  # 强制创建一个新的 orphan 分支
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
