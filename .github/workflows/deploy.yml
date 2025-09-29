@@ -27,20 +27,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'  # 使用更新的 Node.js 版本以支持最新的 Vite 和 Vue
-          cache: 'pnpm'  # 启用依赖缓存
-
-      - name: 安装 pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: latest
 
       - name: 安装依赖
-        run: pnpm install
+        run: npm install
         env:
           NODE_ENV: development  # 安装所有依赖（包括开发依赖）
 
       - name: 构建项目
-        run: pnpm run build
+        run: npm run build
         env:
           NODE_ENV: production  # 生产环境构建
 
