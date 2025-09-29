@@ -1,0 +1,56 @@
+.ce {
+  caret-color: #1677ff;
+  display: inline-block;
+}
+
+/* 1. 基础默认样式 */
+.ce,
+[contenteditable="true"] {
+  transition: border-color 0.2s ease; /* 边框过渡动画 */
+  outline: none; /* 移除默认聚焦外边框 */
+}
+
+/* 2. 聚焦时的样式（增强反馈） */
+.ce:focus,
+[contenteditable="true"]:focus {
+  border: 1px solid #d1d5db; /* 边框 */
+  border-radius: 4px; /* 圆角 */
+  padding: 4px; /* 内边距 */
+  min-height: 20px; /* 最小高度（防止内容过少时太窄） */
+  font-size: 16px;
+  line-height: 1.6;
+  background-color: #ffffff;
+  border-color: #1677ff; /* 聚焦时边框变蓝色 */
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); /* 聚焦阴影 */
+}
+
+/* 3. 选中文本的样式（自定义选中效果） */
+.ce::selection,
+[contenteditable="true"]::selection {
+  background-color: rgba(22, 119, 255, 0.1); /* 选中文本背景色（浅蓝） */
+}
+
+/* 4. 空内容时的 "占位符" 效果（需元素为空时生效） */
+.ce:empty::before,
+[contenteditable="true"]:empty::before {
+  content: "点击此处开始编辑...";
+  color: #9ca3af; /* 占位符文字颜色（浅灰） */
+  pointer-events: none; /* 点击时穿透占位符，直接编辑内容 */
+}
+
+/* 单个A4页样式 */
+.a4-page {
+  width: 794px; /* A4宽度（96 DPI下） */
+  min-height: 1123px; /* A4高度（96 DPI下） */
+  padding: 30px; /* 页边距 */
+  margin-bottom: 20px; /* 页与页之间的间距 */
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+  background: #ffffff; /* 模拟纸张白色 */
+  box-sizing: border-box;
+
+  &.isDrag {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    background-color: rgba(78, 160, 237, 0.1);
+  }
+}
