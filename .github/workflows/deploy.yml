@@ -1,7 +1,7 @@
 name: 自动构建和部署
 on:
   push:
-    branches: [ main ]  # 监听 main 分支的推送
+    branches: [main] # 监听 main 分支的推送
   # 允许手动触发构建
   workflow_dispatch:
 
@@ -21,28 +21,28 @@ jobs:
       - name: 拉取代码
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 拉取所有历史记录以确保构建完整性
+          fetch-depth: 0 # 拉取所有历史记录以确保构建完整性
 
       - name: 安装 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # 使用更新的 Node.js 版本以支持最新的 Vite 和 Vue
+          node-version: "20" # 使用更新的 Node.js 版本以支持最新的 Vite 和 Vue
 
       - name: 安装依赖
         run: npm install
         env:
-          NODE_ENV: development  # 安装所有依赖（包括开发依赖）
+          NODE_ENV: development # 安装所有依赖（包括开发依赖）
 
       - name: 构建项目
         run: npm run build
         env:
-          NODE_ENV: production  # 生产环境构建
+          NODE_ENV: production # 生产环境构建
 
       - name: 部署到 GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist  # 部署 dist 文件夹中的内容
+          publish_dir: ./dist # 部署 dist 文件夹中的内容
           publish_branch: gh-pages
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
