@@ -1,9 +1,9 @@
 import { defineStore } from "pinia";
 import { ref, reactive, computed } from "vue";
-import type { graph } from "../components/RightSidebar.vue";
+import type { MyComponent } from "../components/RightSidebar.vue";
 
 export const useStore = defineStore("store", () => {
-  const currentDragComponent = ref<graph | null>(null);
+  const currentDragComponent = ref<MyComponent | null>(null);
 
   return { currentDragComponent };
 });
