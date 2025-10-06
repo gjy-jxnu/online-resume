@@ -30,7 +30,7 @@ const store = useStore()
 export type MyComponent = {
     componentName: string;
     props?: Record<string, any>;
-    children?: graph[];
+    children?: MyComponent[];
     id: string;
 }
 
@@ -53,7 +53,7 @@ const graphList = ref<Array<graph>>([
 ])
 
 const handleDragStart = (e: DragEvent, item: graph) => {
-    store.currentDragComponent = item
+    store.currentDragComponent = { ...item }
 }
 
 const handleDragEnd = (e: DragEvent) => {

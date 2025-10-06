@@ -15,10 +15,7 @@
 [contenteditable="true"]:focus {
   border: 1px solid #d1d5db; /* 边框 */
   border-radius: 4px; /* 圆角 */
-  padding: 4px; /* 内边距 */
-  min-height: 20px; /* 最小高度（防止内容过少时太窄） */
-  font-size: 16px;
-  line-height: 1.6;
+  padding: 0 8px;
   background-color: #ffffff;
   border-color: #1677ff; /* 聚焦时边框变蓝色 */
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); /* 聚焦阴影 */
@@ -53,4 +50,23 @@
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     background-color: rgba(78, 160, 237, 0.1);
   }
+}
+
+.draggable-component {
+  border: 2px solid transparent; /* 默认透明边框 */
+  transition: all 0.2s ease; /* 过渡动画让效果更丝滑 */
+  --highlight-color: #4096ff; /* 基础高亮色（通过变量动态修改） */
+  --highlight-width: 4px; /* 基础边框宽度（通过变量动态修改） */
+}
+
+/* 左侧高亮 */
+.highlight-left {
+  border-left-color: var(--highlight-color);
+  border-left-width: var(--highlight-width);
+}
+
+/* 右侧高亮 */
+.highlight-right {
+  border-right-color: var(--highlight-color);
+  border-right-width: var(--highlight-width);
 }

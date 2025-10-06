@@ -174,7 +174,7 @@ function initMenuStatus(selection: Selection) {
     }
 
     if (['justifyLeft', 'justifyCenter', 'justifyRight'].includes(item.value)) {
-      const editableDom = findAncestorByClass(parent, 'ce')
+      const editableDom = parent.closest('.ce')
       item.visible = editableDom && window.getComputedStyle(editableDom).display === 'block'
     }
 
@@ -242,14 +242,12 @@ function handleMenuItemClick(item: menuItem, extraParams: any = {}) {
 
 // 事件监听处理函数
 function handleMouseUp(e) {
-  console.log('mouseup')
   target.value = e.target
   handleSelection();
 }
 
 function handleKeyUp(e) {
   // 处理键盘选择（如Shift+箭头）
-  console.log('keyup')
   target.value = e.target
   if (['Shift', 'Control'].includes(e.key)) {
     handleSelection();
@@ -258,7 +256,6 @@ function handleKeyUp(e) {
 
 function handleClickOutside(e) {
   // 点击菜单外部时隐藏
-  console.log('click')
   target.value = e.target
   if (visible.value && menuRef.value && !menuRef.value.contains(e.target) && target.value !== e.target) {
     hideMenu();
