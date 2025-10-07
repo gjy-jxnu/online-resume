@@ -12,7 +12,15 @@
             </a-tab-pane>
 
             <a-tab-pane key="structure" tab="结构">
-
+                <div class="struct-list">
+                    <div class="struct-item" :class="{ checked: component.id === store.currentCheckedID }"
+                        v-for="(component, index) in pageSchema.children" :key="component.id"
+                        @click="checkedComponent(component)">
+                        <IconFont :type="component.icon"></IconFont>
+                        <div style="font-size: 12px; margin-left: 4px;">{{ component.label + '-' + component.id }}</div>
+                        <DeleteOutlined @click="deleteComponent(index)"></DeleteOutlined>
+                    </div>
+                </div>
             </a-tab-pane>
         </a-tabs>
     </div>
@@ -20,8 +28,8 @@
 
 <script lang='ts' setup>
 
-import { ref, reactive, computed } from 'vue';
-import { FontSizeOutlined } from '@ant-design/icons-vue';
+import { ref, reactive, computed, watch } from 'vue';
+import { FontSizeOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 import { createFromIconfontCN } from '@ant-design/icons-vue';
 import { useStore } from '@/stores';
 
@@ -52,6 +60,8 @@ const graphList = ref<Array<graph>>([
     { componentName: 'Horizon', props: {}, id: '', label: '分割线', icon: 'icon-horizon' },
 ])
 
+const pageSchema = ref(null)
+
 const handleDragStart = (e: DragEvent, item: graph) => {
     store.currentDragComponent = { ...item }
 }
@@ -60,6 +70,29 @@ const handleDragEnd = (e: DragEvent) => {
     store.currentDragComponent = null
 }
 
+const checkedComponent = (component) => {
+    const dom = document.getElementById(component.id)
+    const editDom: HTMLElement = dom.querySelector('.ce')
+    if (component.id === store.currentCheckedID) {
+        store.currentCheckedID = ''
+        editDom.blur()
+    } else {
+        store.currentCheckedID = component.id
+        editDom.focus()
+    }
+}
+
+const deleteComponent = (index) => {
+    store.pageSchema.children.splice(index, 1)
+}
+
+watch(() => store.pageSchema, (newVal) => {
+    if (newVal) {
+        pageSchema.value = { ...newVal }
+    }
+}, {
+    deep: true
+})
 </script>
 
 <style lang='less' scoped>
@@ -83,6 +116,28 @@ const handleDragEnd = (e: DragEvent) => {
 }
 
 .graph-item:hover {
+    cursor: pointer;
+    background-color: rgba(22, 119, 255, 0.1);
+}
+
+.struct-list {
+    padding: 10px 5px;
+}
+
+.struct-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    padding: 0 2px;
+    border-radius: 4px;
+
+    &.checked {
+        border-radius: 4px;
+        background-color: rgba(11, 98, 220, 0.1);
+    }
+}
+
+.struct-item:hover {
     cursor: pointer;
     background-color: rgba(22, 119, 255, 0.1);
 }
