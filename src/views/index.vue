@@ -1,7 +1,8 @@
 <template>
     <div class='content' ref="parentRef">
         <div class="a4-page" :class="{ isDrag: store.currentDragComponent && !store.currentDragComponent.id }"
-            @dragenter.prevent="handleCanvasDragEnter" @dragover.prevent @drop.prevent="handleCanvasDrop">
+            @dragenter.prevent="handleCanvasDragEnter" @dragover.prevent @drop.prevent="handleCanvasDrop"
+            @click="uncheckedComponent">
 
             <template v-if="pageSchema.children && pageSchema.children.length">
                 <component :id="component.id" class="draggable-component"
@@ -9,7 +10,8 @@
                     :is="componentMap[component.componentName]" v-bind="component.props" draggable="true"
                     @dragstart="handleDragStart($event, component)" @dragend="handleDragEnd($event, component)"
                     @dragenter.prevent="handleComponentDragEnter" @dragover.prevent="handleComponentDragOver"
-                    @dragleave.prevent="handleComponentDragLeave" @drop.prevent="handleComponentDrop">
+                    @dragleave.prevent="handleComponentDragLeave" @drop.prevent="handleComponentDrop"
+                    @click.stop="checkedComponent(component)">
                 </component>
             </template>
         </div>
@@ -162,9 +164,24 @@ const handleComponentDrop = (e: DragEvent) => {
     console.log('pageSchema', pageSchema.value)
 }
 
+const checkedComponent = (component) => {
+    const dom = document.getElementById(component.id)
+    const editDom: HTMLElement = dom.querySelector('.ce')
+    store.currentCheckedID = component.id
+    editDom.focus()
+}
+
+const uncheckedComponent = () => {
+    const dom = document.getElementById(store.currentCheckedID)
+    const editDom: HTMLElement = dom.querySelector('.ce')
+    store.currentCheckedID = ''
+    editDom.blur()
+}
+
 // 自动保存
 watch(() => pageSchema.value, (newVal) => {
     if (newVal) {
+        store.pageSchema = newVal
         localStorage.setItem('pageSchema', JSON.stringify(pageSchema.value))
     }
 }, { deep: true })
