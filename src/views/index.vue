@@ -15,7 +15,7 @@
             </template>
         </div>
 
-        <selection-menu :parentRef="parentRef"></selection-menu>
+        <selection-menu :parentRef="parentRef" :pageSchema="pageSchema" @propsChange="propsChange"></selection-menu>
     </div>
 </template>
 
@@ -51,6 +51,13 @@ const pageSchema = ref<MyComponent | null>({
     id: uuidv4()
 })
 
+// 更新组件props
+// example：updateComponentProps(component.id, { content: "123", style: { "color": "red" } })
+const updateComponentProps = (id: string, newProps: object) => {
+    const componentSchema = getComponentById(id)
+    componentSchema.props = { ...componentSchema.props, ...newProps }
+}
+
 // 在数组的某个元素前或后插入一个元素
 const insertBeforeOrAfter = (arr: Array<any>, target: any, el: any, pos: string = 'after') => {
     if (!Array.isArray(arr) || !target || !el || !pos) return []
@@ -67,7 +74,7 @@ const insertBeforeOrAfter = (arr: Array<any>, target: any, el: any, pos: string 
     }
 }
 
-// 树遍历查找指定id的节点
+// 树遍历查找指定id的节点schema
 const getComponentById = (id: string, root: MyComponent = pageSchema.value) => {
     if (root.id === id) return root
     if (root.children && root.children.length) {
@@ -150,7 +157,8 @@ const handleComponentDragEnter = (e: DragEvent) => {
 // 拖动放置组件
 const handleComponentDrop = (e: DragEvent) => {
     const component = store.currentDragComponent
-    if (!component) return
+    const targetId = (e.target as HTMLElement).closest('.draggable-component').id
+    if (!component || component?.id === targetId) return
     const componentIndex = pageSchema.value.children.indexOf(component)
     pageSchema.value.children.splice(componentIndex, 1)
     pageSchema.value.children = insertBeforeOrAfter(pageSchema.value.children, overTargetSchema.value, component, pos.value)
@@ -178,6 +186,11 @@ const uncheckedComponent = (e) => {
         store.currentCheckedID = ''
         editDom.blur()
     }
+}
+
+const propsChange = ({ id, innerHTML }) => {
+
+    updateComponentProps(id, { content: innerHTML })
 }
 
 // 自动保存

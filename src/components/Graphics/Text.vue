@@ -1,10 +1,8 @@
 <template>
     <div :style="{ display: type === 'block' ? 'block' : 'inline-block' }">
-        <div v-if="type === 'block'" style="display: block;" class="ce">
-            {{ content }}
+        <div v-if="type === 'block'" style="display: block;" class="ce" v-html="content">
         </div>
-        <div v-if="type === 'inline'" style="display: inline-block;" class='ce'>
-            {{ content }}
+        <div v-if="type === 'inline'" style="display: inline-block;" class='ce' v-html="content">
         </div>
     </div>
 </template>
