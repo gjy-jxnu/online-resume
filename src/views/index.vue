@@ -1,8 +1,7 @@
 <template>
     <div class='content' ref="parentRef">
         <div class="a4-page" :class="{ isDrag: store.currentDragComponent && !store.currentDragComponent.id }"
-            @dragenter.prevent="handleCanvasDragEnter" @dragover.prevent @drop.prevent="handleCanvasDrop"
-            @click="uncheckedComponent">
+            @dragenter.prevent="handleCanvasDragEnter" @dragover.prevent @drop.prevent="handleCanvasDrop">
 
             <template v-if="pageSchema.children && pageSchema.children.length">
                 <component :id="component.id" class="draggable-component"
@@ -22,7 +21,7 @@
 
 <script lang='ts' setup>
 
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import SelectionMenu from '@/components/SelectionMenu.vue';
 import { useStore } from '@/stores';
 import { MyComponent } from '@/components/RightSidebar.vue';
@@ -171,11 +170,14 @@ const checkedComponent = (component) => {
     editDom.focus()
 }
 
-const uncheckedComponent = () => {
+const uncheckedComponent = (e) => {
+    if (!store.currentCheckedID) return
     const dom = document.getElementById(store.currentCheckedID)
     const editDom: HTMLElement = dom.querySelector('.ce')
-    store.currentCheckedID = ''
-    editDom.blur()
+    if (e.target !== editDom) {
+        store.currentCheckedID = ''
+        editDom.blur()
+    }
 }
 
 // 自动保存
@@ -185,6 +187,14 @@ watch(() => pageSchema.value, (newVal) => {
         localStorage.setItem('pageSchema', JSON.stringify(pageSchema.value))
     }
 }, { deep: true })
+
+onMounted(() => {
+    document.addEventListener('click', uncheckedComponent)
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', uncheckedComponent);
+});
 </script>
 
 <style lang='less' scoped>

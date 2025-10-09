@@ -19,7 +19,6 @@
 </template>
 
 <script lang='ts' setup>
-import { findAncestorByClass } from '@/hooks/useDom';
 import FontSizeSelector from './FontSizeSelector.vue';
 import FontColorSelector from './FontColorSelector.vue';
 import { ref, reactive, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
