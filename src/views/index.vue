@@ -29,10 +29,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 // 导入自定义组件
 import Text from '@/components/Graphics/Text.vue';
+import Image from '@/components/Graphics/Image.vue';
 
 // 组件映射表
 const componentMap = {
     Text,
+    Image
 };
 
 const store = useStore()
