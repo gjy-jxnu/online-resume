@@ -10,12 +10,12 @@
                     @dragstart="handleDragStart($event, component)" @dragend="handleDragEnd($event, component)"
                     @dragenter.prevent="handleComponentDragEnter" @dragover.prevent="handleComponentDragOver"
                     @dragleave.prevent="handleComponentDragLeave" @drop.prevent="handleComponentDrop"
-                    @click.stop="checkedComponent(component)">
+                    @click.stop="checkedComponent(component)" @change="componentChange($event, component.id)">
                 </component>
             </template>
         </div>
 
-        <selection-menu :parentRef="parentRef" :pageSchema="pageSchema" @propsChange="propsChange"></selection-menu>
+        <selection-menu :parentRef="parentRef" :pageSchema="pageSchema"></selection-menu>
     </div>
 </template>
 
@@ -30,11 +30,13 @@ import { v4 as uuidv4 } from 'uuid';
 // 导入自定义组件
 import Text from '@/components/Graphics/Text.vue';
 import Image from '@/components/Graphics/Image.vue';
+import Horizon from '@/components/Graphics/Horizon.vue';
 
 // 组件映射表
 const componentMap = {
     Text,
-    Image
+    Image,
+    Horizon
 };
 
 const store = useStore()
@@ -87,6 +89,11 @@ const getComponentById = (id: string, root: MyComponent = pageSchema.value) => {
     }
 
     return null
+}
+
+// 组件变化事件回调
+const componentChange = (props, id) => {
+    updateComponentProps(id, props)
 }
 
 // 拖动进入画布
@@ -188,11 +195,6 @@ const uncheckedComponent = (e) => {
         store.currentCheckedID = ''
         editDom.blur()
     }
-}
-
-const propsChange = ({ id, innerHTML }) => {
-
-    updateComponentProps(id, { content: innerHTML })
 }
 
 // 自动保存

@@ -18,7 +18,7 @@
                         @click.stop="checkedComponent(component)">
                         <IconFont :type="component.icon"></IconFont>
                         <div style="font-size: 12px; margin-left: 4px;">{{ component.label + '-' + component.id }}</div>
-                        <DeleteOutlined @click="deleteComponent(index)"></DeleteOutlined>
+                        <DeleteOutlined @click.stop="deleteComponent(index)"></DeleteOutlined>
                     </div>
                 </div>
             </a-tab-pane>

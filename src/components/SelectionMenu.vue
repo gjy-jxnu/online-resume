@@ -80,7 +80,7 @@ const menuItems = ref<menuItem[]>([
   { label: '右对齐', value: 'justifyRight', icon: 'AlignRightOutlined', visible: false, active: false },
 ])
 
-const emit = defineEmits(['visible-change', 'action', 'propsChange'])
+const emit = defineEmits(['visible-change', 'action'])
 
 const store = useStore()
 
@@ -237,12 +237,6 @@ function handleMenuItemClick(item: menuItem, extraParams: any = {}) {
   }
 
   initMenuStatus(selection)
-
-  // 通知父组件schema需要更新
-  emit('propsChange', {
-    id: store.currentCheckedID,
-    innerHTML: editDom.innerHTML
-  })
 
   // 触发事件，允许父组件处理自定义逻辑
   emit('action', {
