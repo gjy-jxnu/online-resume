@@ -10,10 +10,12 @@
                         <ClearOutlined></ClearOutlined>
                     </a-popconfirm>
                 </div>
-                <div class="menu-item" title="撤销" @click="undo">
+                <div class="menu-item" :class="{ disabled: UndoRedoManager.currentIndex <= 0 }" title="撤销"
+                    @click="undo">
                     <UndoOutlined></UndoOutlined>
                 </div>
-                <div class="menu-item" title="恢复" @click="redo">
+                <div class="menu-item" :class="{ disabled: UndoRedoManager.futureStack.length <= 0 }" title="恢复"
+                    @click="redo">
                     <RedoOutlined></RedoOutlined>
                 </div>
                 <div class="menu-item" title="导出" @click="exportPDF">
@@ -52,6 +54,7 @@ import { MyComponent } from '@/components/RightSidebar.vue';
 import { v4 as uuidv4 } from 'uuid';
 import { ClearOutlined, UndoOutlined, RedoOutlined, ExportOutlined } from '@ant-design/icons-vue';
 import dayjs from 'dayjs'
+import { throttle } from '@/utils/throttle.js'
 
 // 导入自定义组件
 import Text from '@/components/Graphics/Text.vue';
@@ -252,6 +255,31 @@ const uncheckedComponent = (e) => {
 
 /** 顶部菜单 */
 
+const UndoRedoManager = {
+    maxHistory: 50,// 最大历史记录数
+    historyStack: [],// 存储已操作的历史状态（用于撤销）
+    futureStack: [],// 存储被撤销的状态（用于恢复）
+    currentIndex: 0// 当前状态
+}
+
+const isUndoRedo = ref(false)
+
+// 保存schema状态快照
+const saveState = () => {
+    const newHistory = UndoRedoManager.historyStack.slice(0, UndoRedoManager.currentIndex + 1);
+    if (!newHistory.includes(JSON.stringify(pageSchema.value))) {
+        newHistory.push(JSON.stringify(pageSchema.value));
+        if (newHistory.length > UndoRedoManager.maxHistory) {
+            newHistory.shift();
+        }
+        UndoRedoManager.historyStack = newHistory;
+        UndoRedoManager.currentIndex = UndoRedoManager.historyStack.length - 1;
+        UndoRedoManager.futureStack = [];
+    }
+}
+
+const throttledSaveState = throttle(saveState, 300)
+
 // 最后编辑时间
 const lastEditTime = ref('')
 
@@ -265,11 +293,21 @@ const clear = () => {
 }
 
 const undo = () => {
-
+    if (UndoRedoManager.currentIndex <= 0) return;
+    isUndoRedo.value = true
+    UndoRedoManager.futureStack.push(UndoRedoManager.historyStack[UndoRedoManager.currentIndex]);
+    UndoRedoManager.currentIndex--;
+    isUndoRedo.value = false
+    pageSchema.value = JSON.parse(UndoRedoManager.historyStack[UndoRedoManager.currentIndex])
 }
 
 const redo = () => {
-
+    if (UndoRedoManager.futureStack.length === 0) return;
+    isUndoRedo.value = true
+    UndoRedoManager.historyStack.push(UndoRedoManager.futureStack.pop());
+    UndoRedoManager.currentIndex++;
+    isUndoRedo.value = false
+    pageSchema.value = JSON.parse(UndoRedoManager.historyStack[UndoRedoManager.currentIndex]);
 }
 
 const exportPDF = () => {
@@ -282,6 +320,9 @@ watch(() => pageSchema.value, (newVal) => {
         store.pageSchema = newVal
         localStorage.setItem('pageSchema', JSON.stringify(pageSchema.value))
         localStorage.setItem('lastEditTime', String(Date.now()))
+        if (!isUndoRedo.value) {
+            throttledSaveState()
+        }
     }
 }, { deep: true })
 
@@ -334,6 +375,13 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
+
+    &.disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        color: #9ca3af;
+        pointer-events: none;
+    }
 }
 
 .menu-item:hover {
