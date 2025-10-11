@@ -63,6 +63,8 @@ import Text from '@/components/Graphics/Text.vue';
 import Image from '@/components/Graphics/Image.vue';
 import Horizon from '@/components/Graphics/Horizon.vue';
 
+const emit = defineEmits(['loaded'])
+
 // 组件映射表
 const componentMap = {
     Text,
@@ -354,6 +356,7 @@ watch(() => pageSchema.value, (newVal) => {
 }, { deep: true })
 
 onMounted(() => {
+    emit('loaded')
     lastEditTime.value = localStorage.getItem('lastEditTime')
     pageSchema.value = JSON.parse(localStorage.getItem('pageSchema'))
     document.addEventListener('click', uncheckedComponent)
