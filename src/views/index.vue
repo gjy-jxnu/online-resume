@@ -27,9 +27,9 @@
             <div class="a4-page" :class="{ isDrag: store.currentDragComponent && !store.currentDragComponent.id }"
                 @dragenter.prevent="handleCanvasDragEnter" @dragover.prevent @drop.prevent="handleCanvasDrop">
 
-                <template v-if="pageSchema.children && pageSchema.children.length">
+                <template v-if="pageSchema?.children && pageSchema?.children.length">
                     <component :id="component.id" class="draggable-component"
-                        v-for="(component, index) in pageSchema.children" :key="component.id"
+                        v-for="(component, index) in pageSchema?.children" :key="component.id"
                         :is="componentMap[component.componentName]" v-bind="component.props" draggable="true"
                         @mousemove="handleMouseMove($event, component)" @dragstart="handleDragStart($event, component)"
                         @dragend="handleDragEnd($event, component)" @dragenter.prevent="handleComponentDragEnter"
