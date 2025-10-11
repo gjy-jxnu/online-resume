@@ -12,6 +12,7 @@
     "@ant-design/icons-vue": "^7.0.1",
     "ant-design-vue": "^4.2.6",
     "dayjs": "^1.11.18",
+    "html2pdf.js": "^0.12.1",
     "less": "^4.4.1",
     "pinia": "^3.0.3",
     "uuid": "^13.0.0",

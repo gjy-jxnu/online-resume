@@ -18,7 +18,7 @@
                     @click="redo">
                     <RedoOutlined></RedoOutlined>
                 </div>
-                <div class="menu-item" title="导出" @click="exportPDF">
+                <div class="menu-item" :class="{ disabled: isExporting }" title="导出" @click="exportPDF">
                     <ExportOutlined></ExportOutlined>
                 </div>
             </div>
@@ -55,6 +55,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { ClearOutlined, UndoOutlined, RedoOutlined, ExportOutlined } from '@ant-design/icons-vue';
 import dayjs from 'dayjs'
 import { throttle } from '@/utils/throttle.js'
+import html2pdf from 'html2pdf.js';
+import { message } from 'ant-design-vue';
 
 // 导入自定义组件
 import Text from '@/components/Graphics/Text.vue';
@@ -254,6 +256,7 @@ const uncheckedComponent = (e) => {
 }
 
 /** 顶部菜单 */
+const isExporting = ref(false)
 
 const UndoRedoManager = {
     maxHistory: 50,// 最大历史记录数
@@ -311,7 +314,31 @@ const redo = () => {
 }
 
 const exportPDF = () => {
-
+    const A4Dom: HTMLElement = document.querySelector('.a4-page')
+    const option = {
+        margin: 0,
+        filename: '我的简历.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+            scale: 2,
+            useCORS: true,
+            logging: false
+        },
+        jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+        }
+    }
+    isExporting.value = true
+    //@ts-ignore
+    html2pdf().from(A4Dom).set(option).save().then(() => {
+        message.success('导出成功')
+        isExporting.value = false
+    }).catch((err) => {
+        message.success(err || '导出失败')
+        isExporting.value = false
+    });
 }
 
 // 自动保存
@@ -328,6 +355,7 @@ watch(() => pageSchema.value, (newVal) => {
 
 onMounted(() => {
     lastEditTime.value = localStorage.getItem('lastEditTime')
+    pageSchema.value = JSON.parse(localStorage.getItem('pageSchema'))
     document.addEventListener('click', uncheckedComponent)
 });
 
