@@ -6,16 +6,24 @@ import RightSidebar from '@/components/RightSidebar.vue';
 const leftWidth = ref<number>(4)
 const centerWidth = computed(() => 24 - leftWidth.value - rightWidth.value)
 const rightWidth = ref<number>(4)
+const loading = ref(true)
 
 const leftFoldChange = (collapsed: boolean) => {
     leftWidth.value = collapsed ? 2 : 4
 }
+
+const handleRouterViewLoaded = () => {
+    loading.value = false
+}
 </script>
 
 <template>
-    <div class='content' style="display: flex;">
+    <div v-if="loading" style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+        <a-spin size="large" />
+    </div>
+    <div v-show="!loading" class='content' style="display: flex;">
         <left-sidebar :style="{ flex: leftWidth }" @fold-change="leftFoldChange"></left-sidebar>
-        <router-view :style="{ flex: centerWidth }"></router-view>
+        <router-view :style="{ flex: centerWidth }" @loaded="handleRouterViewLoaded"></router-view>
         <right-sidebar :style="{ flex: rightWidth }"></right-sidebar>
     </div>
 </template>
