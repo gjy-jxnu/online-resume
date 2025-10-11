@@ -10,6 +10,7 @@
 <script lang='ts' setup>
 
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
+import { debounce } from '@/utils/debounce.js'
 
 const ceref = ref(null)
 
@@ -26,6 +27,10 @@ const props = defineProps({
 
 const emit = defineEmits(['change'])
 
+const debounceEmit = debounce((content = '') => {
+    emit('change', { content });
+}, 2000)
+
 let observer = null
 
 
@@ -33,7 +38,7 @@ onMounted(() => {
     if (ceref.value) {
         observer = new MutationObserver((mutations) => {
             const newHtml = ceref.value.innerHTML
-            emit('change', { content: newHtml })
+            debounceEmit(newHtml)
         })
 
         observer.observe(ceref.value, {
