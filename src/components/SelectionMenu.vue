@@ -19,7 +19,7 @@
 </template>
 
 <script lang='ts' setup>
-import { findAncestorByClass } from '@/hooks/useDom';
+import { useStore } from '@/stores';
 import FontSizeSelector from './FontSizeSelector.vue';
 import FontColorSelector from './FontColorSelector.vue';
 import { ref, reactive, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
@@ -57,6 +57,11 @@ const props = defineProps({
   parentRef: {
     type: Object,
     default: null
+  },
+  // 页面schema
+  pageSchema: {
+    type: Object,
+    default: null
   }
 })
 
@@ -76,6 +81,8 @@ const menuItems = ref<menuItem[]>([
 ])
 
 const emit = defineEmits(['visible-change', 'action'])
+
+const store = useStore()
 
 // 当前目标元素
 const target = ref(null)
@@ -174,8 +181,8 @@ function initMenuStatus(selection: Selection) {
     }
 
     if (['justifyLeft', 'justifyCenter', 'justifyRight'].includes(item.value)) {
-      const editableDom = parent.closest('.ce')
-      item.visible = editableDom && window.getComputedStyle(editableDom).display === 'block'
+      const editDom = parent.closest('.ce')
+      item.visible = editDom && window.getComputedStyle(editDom).display === 'block'
     }
 
   })
@@ -188,7 +195,7 @@ function handleMenuItemClick(item: menuItem, extraParams: any = {}) {
   }
 
   const selection = window.getSelection();
-  const parent = selection.focusNode.parentElement
+  const editDom: HTMLElement = selection.focusNode.parentElement.closest('.ce')
 
   // 执行默认操作
   switch (item.value) {

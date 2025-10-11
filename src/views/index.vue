@@ -1,39 +1,73 @@
 <template>
-    <div class='content' ref="parentRef">
-        <div class="a4-page" :class="{ isDrag: store.currentDragComponent && !store.currentDragComponent.id }"
-            @dragenter.prevent="handleCanvasDragEnter" @dragover.prevent @drop.prevent="handleCanvasDrop"
-            @click="uncheckedComponent">
-
-            <template v-if="pageSchema.children && pageSchema.children.length">
-                <component :id="component.id" class="draggable-component"
-                    v-for="(component, index) in pageSchema.children" :key="component.id"
-                    :is="componentMap[component.componentName]" v-bind="component.props" draggable="true"
-                    @dragstart="handleDragStart($event, component)" @dragend="handleDragEnd($event, component)"
-                    @dragenter.prevent="handleComponentDragEnter" @dragover.prevent="handleComponentDragOver"
-                    @dragleave.prevent="handleComponentDragLeave" @drop.prevent="handleComponentDrop"
-                    @click.stop="checkedComponent(component)">
-                </component>
-            </template>
+    <div>
+        <div class="header-menu">
+            <div class="tips">
+                <span v-if="lastEditTime">最后编辑时间：{{ dayjs(Number(lastEditTime)).format('YYYY-MM-DD HH:mm:ss') }}</span>
+            </div>
+            <div class="operation">
+                <div class="menu-item" title="清空">
+                    <a-popconfirm title="您确定要清空屏幕吗？" ok-text="确定" cancel-text="取消" @confirm="clear">
+                        <ClearOutlined></ClearOutlined>
+                    </a-popconfirm>
+                </div>
+                <div class="menu-item" :class="{ disabled: UndoRedoManager.currentIndex <= 0 }" title="撤销"
+                    @click="undo">
+                    <UndoOutlined></UndoOutlined>
+                </div>
+                <div class="menu-item" :class="{ disabled: UndoRedoManager.futureStack.length <= 0 }" title="恢复"
+                    @click="redo">
+                    <RedoOutlined></RedoOutlined>
+                </div>
+                <div class="menu-item" :class="{ disabled: isExporting }" title="导出" @click="exportPDF">
+                    <ExportOutlined></ExportOutlined>
+                </div>
+            </div>
         </div>
+        <div class='content' ref="parentRef">
+            <div class="a4-page" :class="{ isDrag: store.currentDragComponent && !store.currentDragComponent.id }"
+                @dragenter.prevent="handleCanvasDragEnter" @dragover.prevent @drop.prevent="handleCanvasDrop">
 
-        <selection-menu :parentRef="parentRef"></selection-menu>
+                <template v-if="pageSchema.children && pageSchema.children.length">
+                    <component :id="component.id" class="draggable-component"
+                        v-for="(component, index) in pageSchema.children" :key="component.id"
+                        :is="componentMap[component.componentName]" v-bind="component.props" draggable="true"
+                        @mousemove="handleMouseMove($event, component)" @dragstart="handleDragStart($event, component)"
+                        @dragend="handleDragEnd($event, component)" @dragenter.prevent="handleComponentDragEnter"
+                        @dragover.prevent="handleComponentDragOver" @dragleave.prevent="handleComponentDragLeave"
+                        @drop.prevent="handleComponentDrop" @click.stop="checkedComponent(component)"
+                        @change="componentChange($event, component.id)">
+                    </component>
+                </template>
+            </div>
+
+            <selection-menu :parentRef="parentRef" :pageSchema="pageSchema"></selection-menu>
+        </div>
     </div>
 </template>
 
 <script lang='ts' setup>
 
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import SelectionMenu from '@/components/SelectionMenu.vue';
 import { useStore } from '@/stores';
 import { MyComponent } from '@/components/RightSidebar.vue';
 import { v4 as uuidv4 } from 'uuid';
+import { ClearOutlined, UndoOutlined, RedoOutlined, ExportOutlined } from '@ant-design/icons-vue';
+import dayjs from 'dayjs'
+import { throttle } from '@/utils/throttle.js'
+import html2pdf from 'html2pdf.js';
+import { message } from 'ant-design-vue';
 
 // 导入自定义组件
 import Text from '@/components/Graphics/Text.vue';
+import Image from '@/components/Graphics/Image.vue';
+import Horizon from '@/components/Graphics/Horizon.vue';
 
 // 组件映射表
 const componentMap = {
     Text,
+    Image,
+    Horizon
 };
 
 const store = useStore()
@@ -52,6 +86,13 @@ const pageSchema = ref<MyComponent | null>({
     id: uuidv4()
 })
 
+// 更新组件props
+// example：updateComponentProps(component.id, { content: "123", style: { "color": "red" } })
+const updateComponentProps = (id: string, newProps: object) => {
+    const componentSchema = getComponentById(id)
+    componentSchema.props = { ...componentSchema.props, ...newProps }
+}
+
 // 在数组的某个元素前或后插入一个元素
 const insertBeforeOrAfter = (arr: Array<any>, target: any, el: any, pos: string = 'after') => {
     if (!Array.isArray(arr) || !target || !el || !pos) return []
@@ -68,7 +109,7 @@ const insertBeforeOrAfter = (arr: Array<any>, target: any, el: any, pos: string 
     }
 }
 
-// 树遍历查找指定id的节点
+// 树遍历查找指定id的节点schema
 const getComponentById = (id: string, root: MyComponent = pageSchema.value) => {
     if (root.id === id) return root
     if (root.children && root.children.length) {
@@ -79,6 +120,11 @@ const getComponentById = (id: string, root: MyComponent = pageSchema.value) => {
     }
 
     return null
+}
+
+// 组件变化事件回调
+const componentChange = (props, id) => {
+    updateComponentProps(id, props)
 }
 
 // 拖动进入画布
@@ -99,8 +145,35 @@ const handleCanvasDrop = (e: DragEvent) => {
     console.log('pageSchema', pageSchema.value)
 }
 
+const handleMouseMove = (e: MouseEvent, component: MyComponent) => {
+    const editDom: HTMLElement = document.getElementById(component.id).querySelector('.ce')
+    const rect = editDom.getBoundingClientRect();
+    const style = getComputedStyle(editDom);
+    const paddingLeft = parseInt(style.paddingLeft);
+    const paddingRight = parseInt(style.paddingRight);
+    const x = e.clientX - rect.left;// 相对元素自身的水平坐标
+
+    if (x > paddingLeft && x < (rect.width - paddingRight)) {
+        editDom.style.cursor = 'text';
+    } else {
+        editDom.style.cursor = 'move';
+    }
+}
+
 // 画布中组件拖动开始
 const handleDragStart = (e: DragEvent, component: MyComponent) => {
+    const editDom: HTMLElement = document.getElementById(component.id).querySelector('.ce')
+    const rect = editDom.getBoundingClientRect();
+    const style = getComputedStyle(editDom);
+    const paddingLeft = parseInt(style.paddingLeft);
+    const paddingRight = parseInt(style.paddingRight);
+    const x = e.clientX - rect.left;// 相对元素自身的水平坐标
+
+    // 禁止拖动
+    if (x > paddingLeft && x < (rect.width - paddingRight)) {
+        e.preventDefault();
+        return false;
+    }
     store.currentDragComponent = component
 }
 
@@ -151,7 +224,8 @@ const handleComponentDragEnter = (e: DragEvent) => {
 // 拖动放置组件
 const handleComponentDrop = (e: DragEvent) => {
     const component = store.currentDragComponent
-    if (!component) return
+    const targetId = (e.target as HTMLElement).closest('.draggable-component').id
+    if (!component || component?.id === targetId) return
     const componentIndex = pageSchema.value.children.indexOf(component)
     pageSchema.value.children.splice(componentIndex, 1)
     pageSchema.value.children = insertBeforeOrAfter(pageSchema.value.children, overTargetSchema.value, component, pos.value)
@@ -171,11 +245,100 @@ const checkedComponent = (component) => {
     editDom.focus()
 }
 
-const uncheckedComponent = () => {
+const uncheckedComponent = (e) => {
+    if (!store.currentCheckedID) return
     const dom = document.getElementById(store.currentCheckedID)
     const editDom: HTMLElement = dom.querySelector('.ce')
-    store.currentCheckedID = ''
-    editDom.blur()
+    if (e.target !== editDom) {
+        store.currentCheckedID = ''
+        editDom.blur()
+    }
+}
+
+/** 顶部菜单 */
+const isExporting = ref(false)
+
+const UndoRedoManager = {
+    maxHistory: 50,// 最大历史记录数
+    historyStack: [],// 存储已操作的历史状态（用于撤销）
+    futureStack: [],// 存储被撤销的状态（用于恢复）
+    currentIndex: 0// 当前状态
+}
+
+const isUndoRedo = ref(false)
+
+// 保存schema状态快照
+const saveState = () => {
+    const newHistory = UndoRedoManager.historyStack.slice(0, UndoRedoManager.currentIndex + 1);
+    if (!newHistory.includes(JSON.stringify(pageSchema.value))) {
+        newHistory.push(JSON.stringify(pageSchema.value));
+        if (newHistory.length > UndoRedoManager.maxHistory) {
+            newHistory.shift();
+        }
+        UndoRedoManager.historyStack = newHistory;
+        UndoRedoManager.currentIndex = UndoRedoManager.historyStack.length - 1;
+        UndoRedoManager.futureStack = [];
+    }
+}
+
+const throttledSaveState = throttle(saveState, 300)
+
+// 最后编辑时间
+const lastEditTime = ref('')
+
+const clear = () => {
+    pageSchema.value = {
+        componentName: 'div',
+        props: {},
+        children: [],
+        id: uuidv4()
+    }
+}
+
+const undo = () => {
+    if (UndoRedoManager.currentIndex <= 0) return;
+    isUndoRedo.value = true
+    UndoRedoManager.futureStack.push(UndoRedoManager.historyStack[UndoRedoManager.currentIndex]);
+    UndoRedoManager.currentIndex--;
+    isUndoRedo.value = false
+    pageSchema.value = JSON.parse(UndoRedoManager.historyStack[UndoRedoManager.currentIndex])
+}
+
+const redo = () => {
+    if (UndoRedoManager.futureStack.length === 0) return;
+    isUndoRedo.value = true
+    UndoRedoManager.historyStack.push(UndoRedoManager.futureStack.pop());
+    UndoRedoManager.currentIndex++;
+    isUndoRedo.value = false
+    pageSchema.value = JSON.parse(UndoRedoManager.historyStack[UndoRedoManager.currentIndex]);
+}
+
+const exportPDF = () => {
+    const A4Dom: HTMLElement = document.querySelector('.a4-page')
+    const option = {
+        margin: 0,
+        filename: '我的简历.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+            scale: 2,
+            useCORS: true,
+            logging: false
+        },
+        jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+        }
+    }
+    isExporting.value = true
+    //@ts-ignore
+    html2pdf().from(A4Dom).set(option).save().then(() => {
+        message.success('导出成功')
+        isExporting.value = false
+    }).catch((err) => {
+        message.success(err || '导出失败')
+        isExporting.value = false
+    });
 }
 
 // 自动保存
@@ -183,11 +346,77 @@ watch(() => pageSchema.value, (newVal) => {
     if (newVal) {
         store.pageSchema = newVal
         localStorage.setItem('pageSchema', JSON.stringify(pageSchema.value))
+        localStorage.setItem('lastEditTime', String(Date.now()))
+        if (!isUndoRedo.value) {
+            throttledSaveState()
+        }
     }
 }, { deep: true })
+
+onMounted(() => {
+    lastEditTime.value = localStorage.getItem('lastEditTime')
+    pageSchema.value = JSON.parse(localStorage.getItem('pageSchema'))
+    document.addEventListener('click', uncheckedComponent)
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', uncheckedComponent);
+});
 </script>
 
 <style lang='less' scoped>
+.header-menu {
+    background-color: #ffffff;
+    padding: 8px;
+    position: sticky;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tips {
+    font-size: 12px;
+    color: #909399;
+    opacity: 1;
+    transform: translateX(0);
+    animation: fade-left 0.5s ease forwards;
+    animation-delay: 2s;
+
+    @keyframes fade-left {
+        to {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+    }
+}
+
+.operation {
+    display: flex;
+}
+
+.menu-item {
+    width: 32px;
+    height: 32px;
+    border-radius: 2px;
+    margin: 0 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &.disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        color: #9ca3af;
+        pointer-events: none;
+    }
+}
+
+.menu-item:hover {
+    cursor: pointer;
+    background-color: #e6e6e6;
+}
+
 .content {
     background-color: #f5f5f5;
     padding: 40px;
