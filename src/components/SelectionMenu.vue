@@ -281,9 +281,9 @@ const fontColorChange = (color, item) => {
 watch(() => props.parentRef, () => {
   // 防止全局监听导致事件污染
   if (props.parentRef) {
-    props.parentRef.addEventListener('mouseup', handleMouseUp);
-    props.parentRef.addEventListener('keyup', handleKeyUp);
-    props.parentRef.addEventListener('click', handleClickOutside);
+    props.parentRef?.addEventListener('mouseup', handleMouseUp);
+    props.parentRef?.addEventListener('keyup', handleKeyUp);
+    props.parentRef?.addEventListener('click', handleClickOutside);
   }
 })
 
@@ -293,9 +293,9 @@ onMounted(() => {
 
 // 清理事件监听
 onUnmounted(() => {
-  props.parentRef.removeEventListener('mouseup', handleMouseUp);
-  props.parentRef.removeEventListener('keyup', handleKeyUp);
-  props.parentRef.removeEventListener('click', handleClickOutside);
+  props.parentRef?.removeEventListener('mouseup', handleMouseUp);
+  props.parentRef?.removeEventListener('keyup', handleKeyUp);
+  props.parentRef?.removeEventListener('click', handleClickOutside);
 });
 
 // 这里只是对文本的监听
