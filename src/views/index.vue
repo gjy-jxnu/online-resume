@@ -7,10 +7,11 @@
                 <component :id="component.id" class="draggable-component"
                     v-for="(component, index) in pageSchema.children" :key="component.id"
                     :is="componentMap[component.componentName]" v-bind="component.props" draggable="true"
-                    @dragstart="handleDragStart($event, component)" @dragend="handleDragEnd($event, component)"
-                    @dragenter.prevent="handleComponentDragEnter" @dragover.prevent="handleComponentDragOver"
-                    @dragleave.prevent="handleComponentDragLeave" @drop.prevent="handleComponentDrop"
-                    @click.stop="checkedComponent(component)" @change="componentChange($event, component.id)">
+                    @mousemove="handleMouseMove($event, component)" @dragstart="handleDragStart($event, component)"
+                    @dragend="handleDragEnd($event, component)" @dragenter.prevent="handleComponentDragEnter"
+                    @dragover.prevent="handleComponentDragOver" @dragleave.prevent="handleComponentDragLeave"
+                    @drop.prevent="handleComponentDrop" @click.stop="checkedComponent(component)"
+                    @change="componentChange($event, component.id)">
                 </component>
             </template>
         </div>
@@ -114,8 +115,35 @@ const handleCanvasDrop = (e: DragEvent) => {
     console.log('pageSchema', pageSchema.value)
 }
 
+const handleMouseMove = (e: MouseEvent, component: MyComponent) => {
+    const editDom: HTMLElement = document.getElementById(component.id).querySelector('.ce')
+    const rect = editDom.getBoundingClientRect();
+    const style = getComputedStyle(editDom);
+    const paddingLeft = parseInt(style.paddingLeft);
+    const paddingRight = parseInt(style.paddingRight);
+    const x = e.clientX - rect.left;// 相对元素自身的水平坐标
+
+    if (x > paddingLeft && x < (rect.width - paddingRight)) {
+        editDom.style.cursor = 'text';
+    } else {
+        editDom.style.cursor = 'move';
+    }
+}
+
 // 画布中组件拖动开始
 const handleDragStart = (e: DragEvent, component: MyComponent) => {
+    const editDom: HTMLElement = document.getElementById(component.id).querySelector('.ce')
+    const rect = editDom.getBoundingClientRect();
+    const style = getComputedStyle(editDom);
+    const paddingLeft = parseInt(style.paddingLeft);
+    const paddingRight = parseInt(style.paddingRight);
+    const x = e.clientX - rect.left;// 相对元素自身的水平坐标
+
+    // 禁止拖动
+    if (x > paddingLeft && x < (rect.width - paddingRight)) {
+        e.preventDefault();
+        return false;
+    }
     store.currentDragComponent = component
 }
 

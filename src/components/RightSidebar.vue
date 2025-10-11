@@ -14,7 +14,7 @@
             <a-tab-pane key="structure" tab="结构">
                 <div class="struct-list">
                     <div class="struct-item" :class="{ checked: component.id === store.currentCheckedID }"
-                        v-for="(component, index) in pageSchema.children" :key="component.id"
+                        v-for="(component, index) in pageSchema?.children" :key="component.id"
                         @click.stop="checkedComponent(component)">
                         <IconFont :type="component.icon"></IconFont>
                         <div style="font-size: 12px; margin-left: 4px;">{{ component.label + '-' + component.id }}</div>
