@@ -1,22 +1,45 @@
 <template>
-    <div class='content' ref="parentRef">
-        <div class="a4-page" :class="{ isDrag: store.currentDragComponent && !store.currentDragComponent.id }"
-            @dragenter.prevent="handleCanvasDragEnter" @dragover.prevent @drop.prevent="handleCanvasDrop">
-
-            <template v-if="pageSchema.children && pageSchema.children.length">
-                <component :id="component.id" class="draggable-component"
-                    v-for="(component, index) in pageSchema.children" :key="component.id"
-                    :is="componentMap[component.componentName]" v-bind="component.props" draggable="true"
-                    @mousemove="handleMouseMove($event, component)" @dragstart="handleDragStart($event, component)"
-                    @dragend="handleDragEnd($event, component)" @dragenter.prevent="handleComponentDragEnter"
-                    @dragover.prevent="handleComponentDragOver" @dragleave.prevent="handleComponentDragLeave"
-                    @drop.prevent="handleComponentDrop" @click.stop="checkedComponent(component)"
-                    @change="componentChange($event, component.id)">
-                </component>
-            </template>
+    <div>
+        <div class="header-menu">
+            <div class="tips">
+                <span v-if="lastEditTime">最后编辑时间：{{ dayjs(Number(lastEditTime)).format('YYYY-MM-DD HH:mm:ss') }}</span>
+            </div>
+            <div class="operation">
+                <div class="menu-item" title="清空">
+                    <a-popconfirm title="您确定要清空屏幕吗？" ok-text="确定" cancel-text="取消" @confirm="clear">
+                        <ClearOutlined></ClearOutlined>
+                    </a-popconfirm>
+                </div>
+                <div class="menu-item" title="撤销" @click="undo">
+                    <UndoOutlined></UndoOutlined>
+                </div>
+                <div class="menu-item" title="恢复" @click="redo">
+                    <RedoOutlined></RedoOutlined>
+                </div>
+                <div class="menu-item" title="导出" @click="exportPDF">
+                    <ExportOutlined></ExportOutlined>
+                </div>
+            </div>
         </div>
+        <div class='content' ref="parentRef">
+            <div class="a4-page" :class="{ isDrag: store.currentDragComponent && !store.currentDragComponent.id }"
+                @dragenter.prevent="handleCanvasDragEnter" @dragover.prevent @drop.prevent="handleCanvasDrop">
 
-        <selection-menu :parentRef="parentRef" :pageSchema="pageSchema"></selection-menu>
+                <template v-if="pageSchema.children && pageSchema.children.length">
+                    <component :id="component.id" class="draggable-component"
+                        v-for="(component, index) in pageSchema.children" :key="component.id"
+                        :is="componentMap[component.componentName]" v-bind="component.props" draggable="true"
+                        @mousemove="handleMouseMove($event, component)" @dragstart="handleDragStart($event, component)"
+                        @dragend="handleDragEnd($event, component)" @dragenter.prevent="handleComponentDragEnter"
+                        @dragover.prevent="handleComponentDragOver" @dragleave.prevent="handleComponentDragLeave"
+                        @drop.prevent="handleComponentDrop" @click.stop="checkedComponent(component)"
+                        @change="componentChange($event, component.id)">
+                    </component>
+                </template>
+            </div>
+
+            <selection-menu :parentRef="parentRef" :pageSchema="pageSchema"></selection-menu>
+        </div>
     </div>
 </template>
 
@@ -27,6 +50,8 @@ import SelectionMenu from '@/components/SelectionMenu.vue';
 import { useStore } from '@/stores';
 import { MyComponent } from '@/components/RightSidebar.vue';
 import { v4 as uuidv4 } from 'uuid';
+import { ClearOutlined, UndoOutlined, RedoOutlined, ExportOutlined } from '@ant-design/icons-vue';
+import dayjs from 'dayjs'
 
 // 导入自定义组件
 import Text from '@/components/Graphics/Text.vue';
@@ -225,15 +250,43 @@ const uncheckedComponent = (e) => {
     }
 }
 
+/** 顶部菜单 */
+
+// 最后编辑时间
+const lastEditTime = ref('')
+
+const clear = () => {
+    pageSchema.value = {
+        componentName: 'div',
+        props: {},
+        children: [],
+        id: uuidv4()
+    }
+}
+
+const undo = () => {
+
+}
+
+const redo = () => {
+
+}
+
+const exportPDF = () => {
+
+}
+
 // 自动保存
 watch(() => pageSchema.value, (newVal) => {
     if (newVal) {
         store.pageSchema = newVal
         localStorage.setItem('pageSchema', JSON.stringify(pageSchema.value))
+        localStorage.setItem('lastEditTime', String(Date.now()))
     }
 }, { deep: true })
 
 onMounted(() => {
+    lastEditTime.value = localStorage.getItem('lastEditTime')
     document.addEventListener('click', uncheckedComponent)
 });
 
@@ -243,6 +296,51 @@ onUnmounted(() => {
 </script>
 
 <style lang='less' scoped>
+.header-menu {
+    background-color: #ffffff;
+    padding: 8px;
+    position: sticky;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tips {
+    font-size: 12px;
+    color: #909399;
+    opacity: 1;
+    transform: translateX(0);
+    animation: fade-left 0.5s ease forwards;
+    animation-delay: 2s;
+
+    @keyframes fade-left {
+        to {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+    }
+}
+
+.operation {
+    display: flex;
+}
+
+.menu-item {
+    width: 32px;
+    height: 32px;
+    border-radius: 2px;
+    margin: 0 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.menu-item:hover {
+    cursor: pointer;
+    background-color: #e6e6e6;
+}
+
 .content {
     background-color: #f5f5f5;
     padding: 40px;
