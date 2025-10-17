@@ -17,10 +17,14 @@
                         v-for="(component, index) in pageSchema?.children" :key="component.id"
                         @click.stop="checkedComponent(component)">
                         <IconFont :type="component.icon"></IconFont>
-                        <div style="font-size: 12px; margin-left: 4px;">{{ component.label + '-' + component.id }}</div>
+                        <div style="font-size: 12px; margin: 0 8px;">{{ component.label + '-' + component.id }}</div>
                         <DeleteOutlined @click.stop="deleteComponent(index)"></DeleteOutlined>
                     </div>
                 </div>
+            </a-tab-pane>
+
+            <a-tab-pane key="template" tab="模板">
+
             </a-tab-pane>
         </a-tabs>
     </div>
@@ -130,6 +134,8 @@ watch(() => store.pageSchema, (newVal) => {
     margin-bottom: 4px;
     padding: 0 2px;
     border-radius: 4px;
+    position: relative;
+    word-wrap: break-word;
 
     &.checked {
         border-radius: 4px;

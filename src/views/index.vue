@@ -18,25 +18,38 @@
                     @click="redo">
                     <RedoOutlined></RedoOutlined>
                 </div>
-                <div class="menu-item" :class="{ disabled: isExporting }">
+                <div class="menu-item">
                     <a-dropdown>
                         <div><span style="margin-right: 4px;">操作</span>
                             <DownOutlined></DownOutlined>
                         </div>
                         <template #overlay>
                             <a-menu>
-                                <a-menu-item style="font-size: 12px; color: #165dff;">
+                                <a-menu-item style="font-size: 12px; color: #165dff;" @click="preview">
+                                    预览
+                                </a-menu-item>
+                                <a-menu-item style="font-size: 12px; color: #165dff;" @click="exportPDF">
                                     导出PDF
                                 </a-menu-item>
-                                <a-menu-item style="font-size: 12px; color: #165dff;">
+                                <a-menu-item style="font-size: 12px; color: #165dff;" @click="exportJSON">
                                     导出JSON
                                 </a-menu-item>
-                                <a-menu-item style="font-size: 12px; color: #165dff;">
+                                <a-menu-item style="font-size: 12px; color: #165dff;" @click="importJSON">
                                     导入JSON
                                 </a-menu-item>
                             </a-menu>
                         </template>
                     </a-dropdown>
+                </div>
+                <div class="menu-item">
+                    <a href="https://github.com/gjy-jxnu/online-resume" target="_blank">
+                        <svg t="1760714113841" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                            xmlns="http://www.w3.org/2000/svg" p-id="4538" width="24" height="24">
+                            <path
+                                d="M960 512c0 97.76-28.704 185.216-85.664 263.264-56.96 78.016-130.496 131.84-220.64 161.856-10.304 1.824-18.368 0.448-22.848-4.032a22.4 22.4 0 0 1-7.2-17.504v-122.88c0-37.632-10.304-65.44-30.464-82.912a409.856 409.856 0 0 0 59.616-10.368 222.752 222.752 0 0 0 54.72-22.816c18.848-10.784 34.528-23.36 47.104-38.592 12.544-15.232 22.848-35.904 30.912-61.44 8.096-25.568 12.128-54.688 12.128-87.904 0-47.072-15.232-86.976-46.208-120.16 14.368-35.456 13.024-74.912-4.48-118.848-10.752-3.616-26.432-1.344-47.072 6.272s-38.56 16.16-53.824 25.568l-21.984 13.888c-36.32-10.304-73.536-15.232-112.096-15.232s-75.776 4.928-112.096 15.232a444.48 444.48 0 0 0-24.672-15.68c-10.336-6.272-26.464-13.888-48.896-22.432-21.952-8.96-39.008-11.232-50.24-8.064-17.024 43.936-18.368 83.424-4.032 118.848-30.496 33.632-46.176 73.536-46.176 120.608 0 33.216 4.032 62.336 12.128 87.456 8.032 25.12 18.368 45.76 30.496 61.44 12.544 15.68 28.224 28.704 47.072 39.04 18.848 10.304 37.216 17.92 54.72 22.816a409.6 409.6 0 0 0 59.648 10.368c-15.712 13.856-25.12 34.048-28.704 60.064a99.744 99.744 0 0 1-26.464 8.512 178.208 178.208 0 0 1-33.184 2.688c-13.024 0-25.568-4.032-38.144-12.544-12.544-8.512-23.296-20.64-32.256-36.32a97.472 97.472 0 0 0-28.256-30.496c-11.232-8.064-21.088-12.576-28.704-13.92l-11.648-1.792c-8.096 0-13.92 0.928-17.056 2.688-3.136 1.792-4.032 4.032-2.688 6.72s3.136 5.408 5.376 8.096 4.928 4.928 7.616 7.168l4.032 2.688c8.544 4.032 17.056 11.232 25.568 21.984 8.544 10.752 14.368 20.64 18.4 29.6l5.824 13.44c4.928 14.816 13.44 26.912 25.568 35.872 12.096 8.992 25.088 14.816 39.008 17.504 13.888 2.688 27.36 4.032 40.352 4.032s23.776-0.448 32.288-2.24l13.472-2.24c0 14.784 0 32.288 0.416 52.032 0 19.744 0.48 30.496 0.48 31.392a22.624 22.624 0 0 1-7.648 17.472c-4.928 4.48-12.992 5.824-23.296 4.032-90.144-30.048-163.68-83.84-220.64-161.888C92.256 697.216 64 609.312 64 512c0-81.152 20.192-156.064 60.096-224.672s94.176-122.88 163.232-163.232C355.936 84.192 430.816 64 512 64s156.064 20.192 224.672 60.096 122.88 94.176 163.232 163.232C939.808 355.488 960 430.848 960 512"
+                                fill="#000000" p-id="4539"></path>
+                        </svg>
+                    </a>
                 </div>
             </div>
         </div>
@@ -59,6 +72,8 @@
 
             <selection-menu :parentRef="parentRef" :pageSchema="pageSchema"></selection-menu>
         </div>
+
+        <input ref="jsonFileInput" style="display: none;" type="file" accept=".json" @change="handleJsonFileChange" />
     </div>
 </template>
 
@@ -73,6 +88,7 @@ import { ClearOutlined, UndoOutlined, RedoOutlined, DownOutlined } from '@ant-de
 import dayjs from 'dayjs'
 import { throttle } from '@/utils/throttle.js'
 import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
 import { message } from 'ant-design-vue';
 
 // 导入自定义组件
@@ -275,7 +291,7 @@ const uncheckedComponent = (e) => {
 }
 
 /** 顶部菜单 */
-const isExporting = ref(false)
+const jsonFileInput = ref(null)
 
 const UndoRedoManager = {
     maxHistory: 50,// 最大历史记录数
@@ -332,6 +348,21 @@ const redo = () => {
     pageSchema.value = JSON.parse(UndoRedoManager.historyStack[UndoRedoManager.currentIndex]);
 }
 
+const preview = () => {
+    const A4Dom: HTMLElement = document.querySelector('.a4-page')
+    html2canvas(A4Dom, {
+        scale: 2,
+        useCORS: true,
+        logging: false
+    }).then(canvas => {
+        localStorage.setItem('previewImgBase64', canvas.toDataURL('image/png', 0.8))
+        const url = new URL('/online-resume/preview', window.location.origin);
+        window.open(url.toString(), '_blank');
+    }).catch((err) => {
+        message.error(err || '预览失败')
+    });
+}
+
 const exportPDF = () => {
     const A4Dom: HTMLElement = document.querySelector('.a4-page')
     const option = {
@@ -349,15 +380,61 @@ const exportPDF = () => {
             orientation: 'portrait'
         }
     }
-    isExporting.value = true
     //@ts-ignore
     html2pdf().from(A4Dom).set(option).save().then(() => {
         message.success('导出成功')
-        isExporting.value = false
     }).catch((err) => {
-        message.success(err || '导出失败')
-        isExporting.value = false
+        message.error(err || '导出失败')
     });
+}
+
+const exportJSON = () => {
+    try {
+        const jsonStr = JSON.stringify(pageSchema.value, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "pageSchema.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        message.error(err || '导出失败')
+    }
+}
+
+const importJSON = () => {
+    jsonFileInput.value.click()
+}
+
+const handleJsonFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.json')) {
+        message.warning('请选择 JSON 格式的文件');
+        jsonFileInput.value = ''
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            //@ts-ignore
+            const jsonData = JSON.parse(event.target.result);
+            pageSchema.value = jsonData;
+            message.success('导入成功');
+
+        } catch (error) {
+            console.error('JSON 解析失败：', error);
+            message.error('文件格式错误，无法解析为 JSON');
+        }
+        jsonFileInput.value = ''
+    };
+
+    reader.readAsText(file);
 }
 
 // 自动保存

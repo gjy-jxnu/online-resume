@@ -9,6 +9,10 @@ const routes = [
     path: "/index",
     component: () => import("@/views/index.vue"),
   },
+  {
+    path: "/preview",
+    component: () => import("@/views/preview.vue"),
+  },
 ];
 
 const router = createRouter({
