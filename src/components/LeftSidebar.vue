@@ -28,7 +28,7 @@ const collapsed = ref(false)
 
 const emit = defineEmits(['fold-change'])
 
-const current = ref<string[]>(['base'])
+const current = ref<string[]>([''])
 
 const items = ref([
     {

@@ -7,5 +7,9 @@ export const useStore = defineStore("store", () => {
   const pageSchema = ref<MyComponent | null>(null);
   const currentCheckedID = ref("");
 
-  return { currentDragComponent, pageSchema, currentCheckedID };
+  return {
+    currentDragComponent,
+    pageSchema,
+    currentCheckedID,
+  };
 });

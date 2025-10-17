@@ -2,6 +2,8 @@
 import { ref, reactive, computed } from 'vue';
 import LeftSidebar from '@/components/LeftSidebar.vue';
 import RightSidebar from '@/components/RightSidebar.vue';
+import { useRoute } from 'vue-router';
+const route = useRoute()
 
 const leftWidth = ref<number>(4)
 const centerWidth = computed(() => 24 - leftWidth.value - rightWidth.value)
@@ -22,9 +24,10 @@ const handleRouterViewLoaded = () => {
         <a-spin size="large" />
     </div>
     <div v-show="!loading" class='content' style="display: flex;">
-        <left-sidebar :style="{ flex: leftWidth }" @fold-change="leftFoldChange"></left-sidebar>
+        <!--         <left-sidebar v-if="route.path === '/index'" :style="{ flex: leftWidth }"
+            @fold-change="leftFoldChange"></left-sidebar> -->
         <router-view :style="{ flex: centerWidth }" @loaded="handleRouterViewLoaded"></router-view>
-        <right-sidebar :style="{ flex: rightWidth }"></right-sidebar>
+        <right-sidebar v-if="route.path === '/index'" :style="{ flex: rightWidth }"></right-sidebar>
     </div>
 </template>
 
