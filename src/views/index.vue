@@ -18,8 +18,25 @@
                     @click="redo">
                     <RedoOutlined></RedoOutlined>
                 </div>
-                <div class="menu-item" :class="{ disabled: isExporting }" title="导出" @click="exportPDF">
-                    <ExportOutlined></ExportOutlined>
+                <div class="menu-item" :class="{ disabled: isExporting }">
+                    <a-dropdown>
+                        <div><span style="margin-right: 4px;">操作</span>
+                            <DownOutlined></DownOutlined>
+                        </div>
+                        <template #overlay>
+                            <a-menu>
+                                <a-menu-item style="font-size: 12px; color: #165dff;">
+                                    导出PDF
+                                </a-menu-item>
+                                <a-menu-item style="font-size: 12px; color: #165dff;">
+                                    导出JSON
+                                </a-menu-item>
+                                <a-menu-item style="font-size: 12px; color: #165dff;">
+                                    导入JSON
+                                </a-menu-item>
+                            </a-menu>
+                        </template>
+                    </a-dropdown>
                 </div>
             </div>
         </div>
@@ -52,7 +69,7 @@ import SelectionMenu from '@/components/SelectionMenu.vue';
 import { useStore } from '@/stores';
 import { MyComponent } from '@/components/RightSidebar.vue';
 import { v4 as uuidv4 } from 'uuid';
-import { ClearOutlined, UndoOutlined, RedoOutlined, ExportOutlined } from '@ant-design/icons-vue';
+import { ClearOutlined, UndoOutlined, RedoOutlined, DownOutlined } from '@ant-design/icons-vue';
 import dayjs from 'dayjs'
 import { throttle } from '@/utils/throttle.js'
 import html2pdf from 'html2pdf.js';
@@ -399,13 +416,15 @@ onUnmounted(() => {
 }
 
 .menu-item {
-    width: 32px;
+    min-width: 32px;
     height: 32px;
     border-radius: 2px;
     margin: 0 4px;
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: 12px;
+    color: #165dff;
 
     &.disabled {
         cursor: not-allowed;

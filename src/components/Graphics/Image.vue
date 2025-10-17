@@ -1,10 +1,10 @@
 <template>
     <div style="display: inline-block;">
-        <div v-if="!src" class="ce">
+        <div v-if="!src" ref="ceref" class="ce">
             <input type="file" accept="image/*" @change="fileChange">
         </div>
 
-        <div v-else class="ce">
+        <div v-else ref="ceref" class="ce">
             <img title="双击调整大小" :src="src" :style="{ width: width + 'px', height: height + 'px' }"
                 @dblclick.stop.prevent="openEdit"></img>
         </div>
@@ -23,7 +23,7 @@
 </template>
 
 <script lang='ts' setup>
-import { ref, reactive, computed, toRefs } from 'vue';
+import { ref, reactive, computed, toRefs, onMounted } from 'vue';
 
 const props = defineProps({
     src: {
@@ -39,6 +39,8 @@ const props = defineProps({
         default: ''
     }
 })
+
+const ceref = ref(null)
 
 let src = ref(props.src)
 
@@ -157,6 +159,25 @@ const fileChange = (e) => {
 
     if (target) target.value = '';
 }
+
+onMounted(() => {
+    if (ceref.value) {
+        const originalContent = ceref.value.innerHTML;
+        ceref.value.style.caretColor = 'transparent'
+
+        ceref.value.addEventListener('keydown', (e) => {
+            e.preventDefault();
+        });
+
+        ceref.value.addEventListener('input', (e) => {
+            setTimeout(() => {
+                if (ceref.value.innerHTML !== originalContent) {
+                    ceref.value.innerHTML = originalContent;
+                }
+            }, 0);
+        });
+    }
+})
 </script>
 
 <style lang='less' scoped></style>
