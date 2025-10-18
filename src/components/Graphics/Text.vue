@@ -29,7 +29,7 @@ const emit = defineEmits(['change'])
 
 const debounceEmit = debounce((content = '') => {
     emit('change', { content });
-}, 2000)
+}, 5000)
 
 let observer = null
 

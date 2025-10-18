@@ -79,7 +79,7 @@
 
 <script lang='ts' setup>
 
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted, defineExpose } from 'vue';
 import SelectionMenu from '@/components/SelectionMenu.vue';
 import { useStore } from '@/stores';
 import { MyComponent } from '@/components/RightSidebar.vue';
@@ -261,8 +261,12 @@ const handleComponentDrop = (e: DragEvent) => {
     const component = store.currentDragComponent
     const targetId = (e.target as HTMLElement).closest('.draggable-component').id
     if (!component || component?.id === targetId) return
-    const componentIndex = pageSchema.value.children.indexOf(component)
-    pageSchema.value.children.splice(componentIndex, 1)
+    if (component?.id) {
+        const componentIndex = pageSchema.value.children.indexOf(component)
+        pageSchema.value.children.splice(componentIndex, 1)
+    } else {
+        component.id = uuidv4()
+    }
     pageSchema.value.children = insertBeforeOrAfter(pageSchema.value.children, overTargetSchema.value, component, pos.value)
     // 清除所有组件的拖动高亮样式
     document.querySelectorAll('.draggable-component').forEach(el => {
@@ -459,6 +463,10 @@ onMounted(() => {
 onUnmounted(() => {
     document.removeEventListener('click', uncheckedComponent);
 });
+
+defineExpose({
+    pageSchema
+})
 </script>
 
 <style lang='less' scoped>
