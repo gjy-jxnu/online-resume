@@ -133,22 +133,27 @@ function positionMenu(range) {
   const menuWidth = menuRef.value.offsetWidth;
 
   // 计算基础位置（选择区域上方居中）
-  let calculatedTop = window.scrollY + rect.top - menuHeight - 5;
-  let calculatedLeft = window.scrollX + rect.left + (rect.width / 2) - (menuWidth / 2);
+  let calculatedTop = rect.top - menuHeight - 5;
+  let calculatedLeft = rect.left + (rect.width / 2) - (menuWidth / 2);
 
   // 防止菜单超出视口顶部
-  if (calculatedTop < window.scrollY) {
-    calculatedTop = window.scrollY + rect.bottom + 5;
+  if (calculatedTop < 0) {
+    calculatedTop = rect.bottom + 5;
   }
 
   // 防止菜单超出视口左侧
-  if (calculatedLeft < window.scrollX) {
-    calculatedLeft = window.scrollX + 10;
+  if (calculatedLeft < 0) {
+    calculatedLeft = 10;
   }
 
   // 防止菜单超出视口右侧
-  if (calculatedLeft + menuWidth > window.scrollX + window.innerWidth) {
-    calculatedLeft = window.scrollX + window.innerWidth - menuWidth - 10;
+  if (calculatedLeft + menuWidth > window.innerWidth) {
+    calculatedLeft = window.innerWidth - menuWidth - 10;
+  }
+
+  // 防止菜单超出视口底部
+  if (calculatedTop + menuHeight > window.innerHeight) {
+    calculatedTop = window.innerHeight - menuHeight - 10;
   }
 
   // 设置最终位置
