@@ -175,6 +175,7 @@ const handleCanvasDrop = (e: DragEvent) => {
     if (!component) return
     if (!component.id) {
         component.id = uuidv4()
+        console.log(pageSchema.value)
         pageSchema.value.children.push(component)
     }
     console.log('pageSchema', pageSchema.value)
@@ -456,7 +457,10 @@ watch(() => pageSchema.value, (newVal) => {
 onMounted(() => {
     emit('loaded')
     lastEditTime.value = localStorage.getItem('lastEditTime')
-    pageSchema.value = JSON.parse(localStorage.getItem('pageSchema'))
+    const schema = JSON.parse(localStorage.getItem('pageSchema'))
+    if (schema) {
+        pageSchema.value = schema
+    }
     document.addEventListener('click', uncheckedComponent)
 });
 
