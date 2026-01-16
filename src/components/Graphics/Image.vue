@@ -1,7 +1,11 @@
 <template>
     <div style="display: inline-block;">
         <div v-if="!src" ref="ceref" class="ce">
-            <input type="file" accept="image/*" @change="fileChange">
+            <div class="image-upload" @click="triggerFileSelect">
+                <PlusOutlined class="image-upload-icon" />
+                <div class="image-upload-text">点击上传图片</div>
+            </div>
+            <input ref="fileInput" type="file" accept="image/*" @change="fileChange" style="display: none;">
         </div>
 
         <div v-else ref="ceref" class="ce">
@@ -24,6 +28,7 @@
 
 <script lang='ts' setup>
 import { ref, reactive, computed, toRefs, onMounted } from 'vue';
+import { PlusOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     src: {
@@ -41,6 +46,7 @@ const props = defineProps({
 })
 
 const ceref = ref(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 let src = ref(props.src)
 
@@ -99,6 +105,12 @@ const handleOk = async () => {
         }
     } catch (e) {
 
+    }
+}
+
+const triggerFileSelect = () => {
+    if (fileInput.value) {
+        fileInput.value.click()
     }
 }
 
@@ -180,4 +192,33 @@ onMounted(() => {
 })
 </script>
 
-<style lang='less' scoped></style>
+<style lang='less' scoped>
+.image-upload {
+    width: 120px;
+    height: 120px;
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #8c8c8c;
+    cursor: pointer;
+    transition: border-color 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+.image-upload:hover {
+    border-color: #165dff;
+    color: #165dff;
+    box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
+}
+
+.image-upload-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.image-upload-text {
+    font-size: 12px;
+}
+</style>
