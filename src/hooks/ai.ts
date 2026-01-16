@@ -187,7 +187,6 @@ const config = {
   },
 };
 
-/** AI对话 */
 export async function AIChat(user_message: string) {
   if (!user_message) return Promise.reject("对话内容为空");
 
@@ -199,9 +198,14 @@ export async function AIChat(user_message: string) {
     },
   ];
 
+  const baseURL =
+    import.meta.env.MODE === "development"
+      ? "/ai"
+      : "https://open.bigmodel.cn/api";
+
   try {
     const res = await axios.post(
-      "/ai/paas/v4/chat/completions",
+      baseURL + "/paas/v4/chat/completions",
       {
         model: config.model,
         messages: messages,
