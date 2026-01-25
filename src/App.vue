@@ -11,10 +11,6 @@ const rightWidth = ref<number>(4)
 const loading = ref(true)
 const routeRef = ref(null)
 
-const leftFoldChange = (collapsed: boolean) => {
-    leftWidth.value = collapsed ? 2 : 4
-}
-
 const handleRouterViewLoaded = () => {
     loading.value = false
 }
@@ -34,8 +30,8 @@ const renderSchema = (schema) => {
         <a-spin size="large" />
     </div>
     <div v-show="!loading" class='content' style="display: flex;">
-        <!--         <left-sidebar v-if="route.path === '/index'" :style="{ flex: leftWidth }"
-            @fold-change="leftFoldChange"></left-sidebar> -->
+        <left-sidebar v-if="route.path === '/index'" :style="{ flex: leftWidth }"
+            @render-schema="renderSchema"></left-sidebar>
         <router-view :style="{ flex: centerWidth }" @loaded="handleRouterViewLoaded">
             <template #default="{ Component }">
                 <component ref="routeRef" :is="Component"></component>

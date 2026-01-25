@@ -1,5 +1,4 @@
 import { message } from "ant-design-vue";
-import axios, { AxiosError } from "axios";
 
 const templateSchema = {
   componentName: "div",
@@ -164,7 +163,7 @@ export const splitString = (str: string, maxLength: number): string[] => {
 
 const config = {
   API_KEY: "0d3a908d77bd48088b41cd5953bfda64.R4QBVVEjq7HVc2DO",
-  model: "glm-4.5-flash",
+  model: "glm-4.7-flash",
   messages: [
     {
       role: "system",
@@ -187,7 +186,15 @@ const config = {
   },
 };
 
-export async function AIChat(user_message: string) {
+/**
+ * 基于智谱对话补全接口的流式聊天请求
+ * @param user_message 用户输入
+ * @param onDelta 每次增量内容回调，用于前端实时展示生成过程
+ */
+export async function AIChat(
+  user_message: string,
+  onDelta?: (delta: string) => void,
+) {
   if (!user_message) return Promise.reject("对话内容为空");
 
   const messages = [
@@ -204,24 +211,92 @@ export async function AIChat(user_message: string) {
       : "https://open.bigmodel.cn/api";
 
   try {
-    const res = await axios.post(
-      baseURL + "/paas/v4/chat/completions",
-      {
-        model: config.model,
-        messages: messages,
+    const response = await fetch(baseURL + "/paas/v4/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + config.API_KEY,
+        "Content-Type": "application/json",
       },
-      {
-        headers: {
-          Authorization: "Bearer " + config.API_KEY,
-          "Content-Type": "application/json",
-        },
+      body: JSON.stringify({
+        model: config.model,
+        messages,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok || !response.body) {
+      const text = await response.text().catch(() => "");
+      const msg = text || `请求失败，状态码：${response.status}`;
+      message.error(msg);
+      return Promise.reject(msg);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+    let fullText = "";
+
+    // 按行解析服务端发送的 SSE 流
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let newlineIndex = buffer.indexOf("\n");
+      while (newlineIndex !== -1) {
+        const line = buffer.slice(0, newlineIndex).trim();
+        buffer = buffer.slice(newlineIndex + 1);
+
+        // 忽略空行或注释行
+        if (!line || line.startsWith(":")) {
+          newlineIndex = buffer.indexOf("\n");
+          continue;
+        }
+
+        // 结束标记
+        if (line === "data: [DONE]" || line === "[DONE]") {
+          newlineIndex = buffer.indexOf("\n");
+          continue;
+        }
+
+        const dataStr = line.startsWith("data:") ? line.slice(5).trim() : line;
+
+        if (!dataStr) {
+          newlineIndex = buffer.indexOf("\n");
+          continue;
+        }
+
+        try {
+          const json = JSON.parse(dataStr);
+          const delta: string =
+            json?.choices?.[0]?.delta?.reasoning_content ??
+            json?.choices?.[0]?.message?.content ??
+            "";
+
+          if (delta) {
+            fullText += delta;
+            if (onDelta) {
+              onDelta(delta);
+            }
+          }
+        } catch (e) {
+          // 流式返回中可能包含非 JSON 片段，这里直接忽略解析错误
+          console.error("解析流式数据失败", e, dataStr);
+        }
+
+        newlineIndex = buffer.indexOf("\n");
       }
-    );
-    console.log(res);
-    const { choices = [] } = res.data;
-    return Promise.resolve(choices[0].message.content);
+    }
+
+    if (!fullText) {
+      const msg = "未收到任何内容，请稍后重试";
+      message.error(msg);
+      return Promise.reject(msg);
+    }
+
+    return fullText;
   } catch (err: any) {
-    const msg = err?.response?.data?.error?.message;
+    const msg = err?.message || "请求失败，请稍后重试";
     message.error(msg);
     return Promise.reject(msg);
   }
