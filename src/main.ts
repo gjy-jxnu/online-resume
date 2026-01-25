@@ -21,3 +21,17 @@ app.use(pinia);
 app.use(router);
 app.use(Antd);
 app.mount("#app");
+
+const globalLoader = document.getElementById("global-loader");
+
+if (globalLoader) {
+  globalLoader.style.transition = "opacity 0.3s ease";
+  globalLoader.style.opacity = "0";
+  globalLoader.style.pointerEvents = "none";
+
+  setTimeout(() => {
+    if (globalLoader.parentNode) {
+      globalLoader.parentNode.removeChild(globalLoader);
+    }
+  }, 300);
+}
